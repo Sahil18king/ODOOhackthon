@@ -1,0 +1,89 @@
+{% load static %}
+<!-- sell.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell E-Waste</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Sell Your E-Waste</h2>
+
+        <!-- Sell Form -->
+        <form method="post" enctype="multipart/form-data" action="{% url 'sell' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="name" class="form-label">Name of E-Waste</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="price" class="form-label">Price</label>
+                <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="photo" class="form-label">Photo</label>
+                <input type="file" class="form-control" id="photo" name="photo" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+
+        <!-- User's Listings Table -->
+        <h2>Your Listings</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Description</th>
+                    <th>Photo</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Revised Offer</th> <!-- New column for revised offer -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for listing in user_listings %}
+                <tr>
+                    <td>{{ listing.name }}</td>
+                    <td>{{ listing.price }}</td>
+                    <td>{{ listing.quantity }}</td>
+                    <td>{{ listing.description }}</td>
+                    <td><img src="{{ listing.photo.url }}" alt="Listing Photo" style="max-width: 100px;"></td>
+                    <td>{{ listing.created_at }}</td>
+                    <td>
+                        {% if listing.status %}
+                            {{ listing.status }}
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if listing.revised_offer %}
+                            {{ listing.revised_offer }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">You have not listed any items yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

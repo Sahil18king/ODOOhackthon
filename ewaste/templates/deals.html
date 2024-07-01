@@ -1,0 +1,108 @@
+{% load static %}
+<!-- deals.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deals Management</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery -->
+</head>
+
+<body>
+    <div class="container">
+        <h2>Deals Management</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Description</th>
+                    <th>Photo</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                    <th>Revised Offer</th> <!-- New column for Revised Offer -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for listing in sell_listings %}
+                <tr id="listing-row-{{ listing.id }}">
+                    <td>{{ listing.user.username }}</td>
+                    <td>{{ listing.name }}</td>
+                    <td>{{ listing.price }}</td>
+                    <td>{{ listing.quantity }}</td>
+                    <td>{{ listing.description }}</td>
+                    <td><img src="{{ listing.photo.url }}" alt="Listing Photo" style="max-width: 100px;"></td>
+                    <td>{{ listing.created_at }}</td>
+                    <td id="status-{{ listing.id }}">{{ listing.status }}</td>
+                    <td>
+                        <form id="update-form-{{ listing.id }}" method="post" action="{% url 'update_listing_status' listing.id %}">
+                            {% csrf_token %}
+                            <select name="status" class="form-select" onchange="toggleRevisedOfferInput({{ listing.id }})">
+                                <option value="accepted">Accept</option>
+                                <option value="rejected">Reject</option>
+                                <option value="revised_offer">Revised Offer</option>
+                            </select>
+                            <!-- Input field for revised offer -->
+                            <input type="text" name="revised_offer" class="form-control" placeholder="Enter revised offer" style="display: none;" id="revised-offer-input-{{ listing.id }}">
+                            <button type="button" onclick="updateStatus({{ listing.id }})" class="btn btn-sm btn-primary">Update</button>
+                        </form>
+                    </td>
+                    <td id="revised-offer-{{ listing.id }}">{{ listing.revised_offer }}</td> <!-- Display revised offer dynamically -->
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10">No listings available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function toggleRevisedOfferInput(listingId) {
+            var statusSelect = $('#update-form-' + listingId + ' select[name="status"]');
+            var revisedOfferInput = $('#revised-offer-input-' + listingId);
+            if (statusSelect.val() === 'revised_offer') {
+                revisedOfferInput.show();
+            } else {
+                revisedOfferInput.hide();
+            }
+        }
+
+        function updateStatus(listingId) {
+            var form = $('#update-form-' + listingId);
+            var statusSelect = form.find('select[name="status"]');
+            var selectedStatus = statusSelect.val();
+            var revisedOfferInput = form.find('input[name="revised_offer"]');
+
+            $.ajax({
+                type: form.attr('method'),
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function (response) {
+                    // Update the status column in the table row dynamically
+                    $('#status-' + listingId).text(selectedStatus);
+
+                    // Handle Revised Offer display
+                    if (selectedStatus === 'revised_offer') {
+                        $('#revised-offer-' + listingId).text(response.revised_offer);
+                    } else {
+                        $('#revised-offer-' + listingId).empty(); // Clear revised offer if not selected
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error updating status:', errorThrown);
+                    // Handle error scenarios if needed
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
